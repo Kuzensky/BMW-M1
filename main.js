@@ -1,11 +1,10 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { animate, createTimeline, stagger } from 'animejs';
 
 // ── Renderer ──────────────────────────────────────────────
 const canvas = document.getElementById('canvas');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
@@ -16,197 +15,269 @@ renderer.toneMappingExposure = 1.2;
 // ── Scene ─────────────────────────────────────────────────
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x060606);
-scene.fog = new THREE.Fog(0x060606, 18, 35);
+scene.fog = new THREE.FogExp2(0x060606, 0.045);
 
 // ── Camera ────────────────────────────────────────────────
 const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 100);
-camera.position.set(0, 6, 18); // start: high & far back for intro
+camera.position.set(0, 8, 18); // intro start: high & far
 
 // ── Lights ────────────────────────────────────────────────
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
-scene.add(ambientLight);
+scene.add(new THREE.AmbientLight(0xffffff, 0.3));
 
-// Key light (warm front-left)
 const keyLight = new THREE.DirectionalLight(0xfff5e0, 3.5);
 keyLight.position.set(5, 8, 5);
 keyLight.castShadow = true;
 keyLight.shadow.mapSize.set(2048, 2048);
 keyLight.shadow.camera.near = 0.1;
 keyLight.shadow.camera.far = 30;
-keyLight.shadow.camera.left = -8;
-keyLight.shadow.camera.right = 8;
-keyLight.shadow.camera.top = 8;
-keyLight.shadow.camera.bottom = -8;
+keyLight.shadow.camera.left = keyLight.shadow.camera.bottom = -8;
+keyLight.shadow.camera.right = keyLight.shadow.camera.top = 8;
 scene.add(keyLight);
 
-// Rim light (cool back-right)
 const rimLight = new THREE.DirectionalLight(0xaad4ff, 2);
 rimLight.position.set(-6, 4, -6);
 scene.add(rimLight);
 
-// Ground bounce
-const fillLight = new THREE.DirectionalLight(0xc8a96e, 0.6);
+const fillLight = new THREE.DirectionalLight(0xc8a96e, 0.5);
 fillLight.position.set(0, -3, 0);
 scene.add(fillLight);
 
-// Accent point light under car
 const underLight = new THREE.PointLight(0xc8a96e, 0.8, 8);
 underLight.position.set(0, -0.8, 0);
 scene.add(underLight);
 
-// ── Ground plane (receives shadow) ────────────────────────
-const groundGeo = new THREE.PlaneGeometry(40, 40);
-const groundMat = new THREE.ShadowMaterial({ opacity: 0.35 });
-const ground = new THREE.Mesh(groundGeo, groundMat);
-ground.rotation.x = -Math.PI / 2;
-ground.position.y = -0.01;
-ground.receiveShadow = true;
-scene.add(ground);
+// ── Ground ────────────────────────────────────────────────
+const shadowGround = new THREE.Mesh(
+  new THREE.PlaneGeometry(40, 40),
+  new THREE.ShadowMaterial({ opacity: 0.4 })
+);
+shadowGround.rotation.x = -Math.PI / 2;
+shadowGround.position.y = -0.01;
+shadowGround.receiveShadow = true;
+scene.add(shadowGround);
 
-// Reflective ground disc
-const discGeo = new THREE.CircleGeometry(3.5, 64);
-const discMat = new THREE.MeshStandardMaterial({
-  color: 0x111111,
-  metalness: 0.9,
-  roughness: 0.3,
-});
-const disc = new THREE.Mesh(discGeo, discMat);
+const disc = new THREE.Mesh(
+  new THREE.CircleGeometry(3.5, 64),
+  new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.9, roughness: 0.3 })
+);
 disc.rotation.x = -Math.PI / 2;
 disc.position.y = -0.005;
 disc.receiveShadow = true;
 scene.add(disc);
 
-// ── Controls ──────────────────────────────────────────────
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.04;
-controls.enablePan = false;
-controls.minPolarAngle = Math.PI * 0.25;
-controls.maxPolarAngle = Math.PI * 0.55;
-controls.minDistance = 3;
-controls.maxDistance = 12;
-controls.autoRotate = true;
-controls.autoRotateSpeed = 0.6;
-controls.enabled = false; // disabled during intro
+// ── Camera waypoints per section ──────────────────────────
+// [x, y, z] position, [x, y, z] lookAt target
+const waypoints = [
+  { pos: [5,  2.2,  7  ], look: [0, 0.8, 0] }, // S0 Hero    — 3/4 front
+  { pos: [0,  1.8,  4.5], look: [0, 1.2, 0] }, // S1 Engine  — front face
+  { pos: [8,  1.0,  0.5], look: [0, 0.8, 0] }, // S2 Design  — side profile
+  { pos: [-5, 2.0, -5  ], look: [0, 0.7, 0] }, // S3 Perf    — rear 3/4
+  { pos: [3,  5.5,  10 ], look: [0, 0.5, 0] }, // S4 Legacy  — elevated wide
+];
 
-// ── Loader UI ─────────────────────────────────────────────
-const loaderEl = document.getElementById('loader');
+// Live interpolated camera state
+const camPos    = new THREE.Vector3(...waypoints[0].pos);
+const camLook   = new THREE.Vector3(...waypoints[0].look);
+const wantPos   = camPos.clone();
+const wantLook  = camLook.clone();
+
+// ── Scroll state ──────────────────────────────────────────
+let currentSection = 0;
+const sections = ['s0','s1','s2','s3','s4'].map(id => document.getElementById(id));
+const contentEls = ['sc1','sc2','sc3','sc4'].map(id => document.getElementById(id));
+const dots = document.querySelectorAll('.dot');
+let contentAnimated = [false, false, false, false];
+
+function setWaypoint(index) {
+  const w = waypoints[index];
+  wantPos.set(...w.pos);
+  wantLook.set(...w.look);
+
+  // Update dots
+  dots.forEach((d, i) => d.classList.toggle('active', i === index));
+
+
+  // Hide all section content first
+  contentEls.forEach((el) => {
+    if (el) el.style.visibility = 'hidden';
+  });
+
+  // Show & animate the active section's content
+  if (index > 0) {
+    const el = contentEls[index - 1];
+    if (el) {
+      el.style.visibility = 'visible';
+      if (!contentAnimated[index - 1]) {
+        contentAnimated[index - 1] = true;
+        animate(el, { opacity: [0, 1], translateY: [40, 0], duration: 900, easing: 'easeOutExpo' });
+        animate(el.querySelectorAll('.section-tag, .section-title, .section-desc, .stat-item, .legacy-years'), {
+          opacity: [0, 1],
+          translateY: [20, 0],
+          duration: 700,
+          delay: stagger(100),
+          easing: 'easeOutExpo',
+        });
+      }
+    }
+  }
+}
+
+window.addEventListener('scroll', () => {
+  const scrollY = window.scrollY;
+  const winH    = window.innerHeight;
+  const total   = waypoints.length;
+
+  // Continuous scroll progress: 0 → (total-1) across all sections
+  const progress    = scrollY / winH;
+  const fromIdx     = Math.min(Math.floor(progress), total - 2);
+  const toIdx       = fromIdx + 1;
+  const t           = progress - fromIdx; // 0→1 within this pair
+
+  // Smoothstep for nicer easing between waypoints
+  const ease = t * t * (3 - 2 * t);
+
+  wantPos.set(
+    THREE.MathUtils.lerp(waypoints[fromIdx].pos[0], waypoints[toIdx].pos[0], ease),
+    THREE.MathUtils.lerp(waypoints[fromIdx].pos[1], waypoints[toIdx].pos[1], ease),
+    THREE.MathUtils.lerp(waypoints[fromIdx].pos[2], waypoints[toIdx].pos[2], ease),
+  );
+  wantLook.set(
+    THREE.MathUtils.lerp(waypoints[fromIdx].look[0], waypoints[toIdx].look[0], ease),
+    THREE.MathUtils.lerp(waypoints[fromIdx].look[1], waypoints[toIdx].look[1], ease),
+    THREE.MathUtils.lerp(waypoints[fromIdx].look[2], waypoints[toIdx].look[2], ease),
+  );
+
+  // Fade specs bar & hero content out based on raw scroll progress
+  const heroFade = Math.max(0, 1 - progress * 4); // gone by 25% scroll
+  const specsBar = document.querySelector('.specs-bar');
+  const heroTop  = document.querySelector('.hero-top');
+  if (specsBar) specsBar.style.opacity = heroFade;
+  if (heroTop)  heroTop.style.opacity  = heroFade;
+
+  // Active section for UI (dots, content)
+  const active = Math.min(Math.round(progress), total - 1);
+  if (active !== currentSection) {
+    currentSection = active;
+    setWaypoint(active);
+  }
+}, { passive: true });
+
+// Dot click navigation
+dots.forEach((dot) => {
+  dot.addEventListener('click', () => {
+    const idx = parseInt(dot.dataset.section);
+    sections[idx].scrollIntoView({ behavior: 'smooth' });
+  });
+});
+
+// CTA scroll down
+document.getElementById('scroll-cta').addEventListener('click', () => {
+  sections[1].scrollIntoView({ behavior: 'smooth' });
+});
+
+// Nav link click
+document.querySelectorAll('.nav-links a').forEach((a) => {
+  a.addEventListener('click', (e) => {
+    e.preventDefault();
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth' });
+  });
+});
+
+// ── Loader (plain CSS — no anime.js dependency) ───────────
+const loaderEl  = document.getElementById('loader');
 const loaderBar = document.getElementById('loader-bar');
 
-// Animate loader bar indeterminate pulse
-animate(loaderBar, { width: ['0%', '80%'], duration: 2500, easing: 'easeInOutQuart' });
+// Pulse the bar with CSS transition
+loaderBar.style.transition = 'width 2.5s ease-in-out';
+requestAnimationFrame(() => { loaderBar.style.width = '75%'; });
+
+function dismissLoader(model) {
+  loaderBar.style.transition = 'width 0.3s ease';
+  loaderBar.style.width = '100%';
+  setTimeout(() => {
+    loaderEl.style.transition = 'opacity 0.7s ease';
+    loaderEl.style.opacity = '0';
+    setTimeout(() => {
+      loaderEl.style.display = 'none';
+      runIntro(model);
+    }, 700);
+  }, 300);
+}
 
 // ── Load Model ────────────────────────────────────────────
-const gltfLoader = new GLTFLoader();
-
-gltfLoader.load(
+new GLTFLoader().load(
   '/assets/1979_bmw_m1.glb',
   (gltf) => {
     const model = gltf.scene;
 
-    // Enable shadows on all meshes
     model.traverse((child) => {
-      if (child.isMesh) {
-        child.castShadow = true;
-        child.receiveShadow = true;
-      }
+      if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; }
     });
 
-    // Auto-scale: normalize model to ~4 units wide
+    // Auto-scale to 4 units wide
     const box = new THREE.Box3().setFromObject(model);
     const size = box.getSize(new THREE.Vector3());
-    const maxDim = Math.max(size.x, size.y, size.z);
-    const targetSize = 4;
-    const scaleFactor = targetSize / maxDim;
-    model.scale.setScalar(scaleFactor);
+    const scale = 4 / Math.max(size.x, size.y, size.z);
+    model.scale.setScalar(scale);
 
-    // Re-compute box after scaling, then center
+    // Center on ground
     box.setFromObject(model);
     const center = box.getCenter(new THREE.Vector3());
     const scaledSize = box.getSize(new THREE.Vector3());
     model.position.sub(center);
-    model.position.y += scaledSize.y / 2; // sit on ground
+    model.position.y += scaledSize.y / 2;
 
     scene.add(model);
-
-    // Complete loader bar
-    animate(loaderBar, { width: '100%', duration: 400, easing: 'easeOutExpo' });
-
-    // Fade out loader then run intro
-    setTimeout(() => {
-      animate(loaderEl, {
-        opacity: 0,
-        duration: 600,
-        easing: 'easeOutQuad',
-        onComplete: () => {
-          loaderEl.style.display = 'none';
-          runIntro(model);
-        },
-      });
-    }, 500);
+    dismissLoader(model);
   },
   (xhr) => {
-    // Progress
     if (xhr.lengthComputable) {
-      const pct = (xhr.loaded / xhr.total) * 80;
-      animate(loaderBar, { width: `${pct}%`, duration: 300, easing: 'easeOutQuad' });
+      const pct = (xhr.loaded / xhr.total) * 75;
+      loaderBar.style.transition = 'width 0.2s ease';
+      loaderBar.style.width = `${pct}%`;
     }
+  },
+  (err) => {
+    console.error('GLB load error:', err);
   }
 );
 
-// ── Intro Sequence ────────────────────────────────────────
+// ── Intro sequence ────────────────────────────────────────
 function runIntro(model) {
-  // 1. Model rises up
-  const startY = model.position.y - 1.5;
-  model.position.y = startY;
+  // Model rises from below
+  model.position.y -= 1.8;
+  animate(model.position, { y: model.position.y + 1.8, duration: 1400, easing: 'easeOutExpo' });
 
-  animate(model.position, {
-    y: model.position.y + 1.5,
-    duration: 1400,
-    easing: 'easeOutExpo',
-  });
-
-  // 2. Camera swoops to final position
+  // Camera sweeps to hero waypoint
+  const heroW = waypoints[0];
   animate(camera.position, {
-    x: 5,
-    y: 2.2,
-    z: 7,
-    duration: 2200,
+    x: heroW.pos[0], y: heroW.pos[1], z: heroW.pos[2],
+    duration: 2400,
     easing: 'easeInOutQuart',
-    onComplete: () => {
-      controls.enabled = true;
-    },
+  }).then(() => {
+    camPos.set(...heroW.pos);
+    camLook.set(...heroW.look);
+    wantPos.copy(camPos);
+    wantLook.copy(camLook);
   });
 
-  // 3. UI reveal timeline
+  // UI stagger in
   const tl = createTimeline({ defaults: { easing: 'easeOutExpo' } });
-
-  tl.add('nav', { opacity: [0, 1], translateY: [-10, 0], duration: 700 }, 400)
-    .add('.hero-label', { opacity: [0, 1], translateY: [10, 0], duration: 600 }, 800)
+  tl.add('nav',         { opacity: [0, 1], translateY: [-10, 0], duration: 600 }, 600)
+    .add('#progress-dots', { opacity: [0, 1], duration: 500 }, 900)
+    .add('.hero-top',   { opacity: [0, 1], duration: 500 }, 900)
     .add('.hero-title', { opacity: [0, 1], translateY: [40, 0], duration: 900 }, 1000)
-    .add('.hero-sub', { opacity: [0, 1], duration: 600 }, 1600)
-    .add('.hero-cta', { opacity: [0, 1], translateY: [10, 0], duration: 600 }, 1900)
-    .add('.spec', {
-      opacity: [0, 1],
-      translateY: [20, 0],
-      duration: 500,
-      delay: stagger(80),
-    }, 2000)
-    .add('.scroll-hint', { opacity: [0, 0.5], duration: 600 }, 2600);
+    .add('.hero-sub',   { opacity: [0, 1], duration: 600 }, 1700)
+    .add('.hero-cta',   { opacity: [0, 1], translateY: [10, 0], duration: 600 }, 2000)
+    .add('.specs-bar',  { opacity: [0, 1], translateY: [20, 0], duration: 600 }, 2200);
 }
 
-// ── Mouse parallax on hero text ───────────────────────────
-const hero = document.querySelector('.hero');
-let mouseX = 0, mouseY = 0;
-
+// ── Mouse parallax ────────────────────────────────────────
+let mx = 0, my = 0;
 document.addEventListener('mousemove', (e) => {
-  mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
-  mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
-});
-
-// ── CTA button: camera spin ───────────────────────────────
-document.querySelector('.hero-cta').addEventListener('click', () => {
-  controls.autoRotate = !controls.autoRotate;
+  mx = (e.clientX / window.innerWidth  - 0.5) * 2;
+  my = (e.clientY / window.innerHeight - 0.5) * 2;
 });
 
 // ── Resize ────────────────────────────────────────────────
@@ -216,24 +287,28 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// ── Render Loop ───────────────────────────────────────────
+// ── Render loop ───────────────────────────────────────────
 const clock = new THREE.Clock();
 
-function tick() {
+(function tick() {
   requestAnimationFrame(tick);
 
-  const elapsed = clock.getElapsedTime();
+  const t = clock.getElapsedTime();
 
-  // Subtle under-light pulse
-  underLight.intensity = 0.6 + Math.sin(elapsed * 1.2) * 0.2;
+  // Smooth cinematic camera glide
+  camPos.lerp(wantPos, 0.018);
+  camLook.lerp(wantLook, 0.022);
 
-  // Parallax hero text
-  if (hero) {
-    hero.style.transform = `translate(${mouseX * -6}px, ${mouseY * -4}px)`;
-  }
+  // Subtle mouse parallax offset on top of waypoint
+  camera.position.set(
+    camPos.x + mx * 0.12,
+    camPos.y + my * -0.08,
+    camPos.z
+  );
+  camera.lookAt(camLook);
 
-  controls.update();
+  // Pulse under-glow
+  underLight.intensity = 0.55 + Math.sin(t * 1.1) * 0.2;
+
   renderer.render(scene, camera);
-}
-
-tick();
+})();

@@ -13,56 +13,48 @@
       :root {
         --accent: #c8a96e;
         --dim: rgba(255,255,255,0.35);
-        --glass: rgba(255,255,255,0.04);
       }
+
+      html { scroll-behavior: auto; }
 
       body {
         background: #060606;
         color: #fff;
         font-family: 'Inter', sans-serif;
-        overflow: hidden;
-        height: 100vh;
-        width: 100vw;
+        overflow-x: hidden;
       }
 
-      /* ── Canvas ── */
+      /* ── Canvas (fixed behind everything) ── */
       #canvas {
         position: fixed;
         inset: 0;
         z-index: 0;
       }
 
-      /* Spotlight glow under car */
-      body::after {
-        content: '';
+      /* spotlight glow */
+      #glow {
         position: fixed;
         bottom: -10%;
         left: 50%;
         transform: translateX(-50%);
         width: 70vw;
         height: 50vh;
-        background: radial-gradient(ellipse, rgba(200,169,110,0.08) 0%, transparent 70%);
+        background: radial-gradient(ellipse, rgba(200,169,110,0.07) 0%, transparent 70%);
         pointer-events: none;
         z-index: 1;
       }
 
-      /* ── UI Layer ── */
-      .ui {
-        position: fixed;
-        inset: 0;
-        z-index: 10;
-        pointer-events: none;
-        display: flex;
-        flex-direction: column;
-      }
-
-      /* ── Nav ── */
+      /* ── Fixed Nav ── */
       nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 50;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 28px 48px;
-        pointer-events: all;
+        padding: 28px 52px;
         opacity: 0;
       }
 
@@ -73,156 +65,53 @@
         color: var(--accent);
       }
 
-      .nav-links {
-        display: flex;
-        gap: 36px;
-      }
+      .nav-links { display: flex; gap: 36px; }
 
       .nav-links a {
         color: var(--dim);
         text-decoration: none;
-        font-size: 0.78rem;
+        font-size: 0.75rem;
         font-weight: 500;
-        letter-spacing: 0.12em;
+        letter-spacing: 0.14em;
         text-transform: uppercase;
         transition: color 0.3s;
       }
-
       .nav-links a:hover { color: #fff; }
 
-      /* ── Hero ── */
-      .hero {
-        padding: 0 48px;
-        margin-top: auto;
-        margin-bottom: auto;
-        max-width: 480px;
-      }
-
-      .hero-label {
-        font-size: 0.72rem;
-        letter-spacing: 0.25em;
-        text-transform: uppercase;
-        color: var(--accent);
-        margin-bottom: 16px;
-        opacity: 0;
-      }
-
-      .hero-title {
-        font-family: 'Bebas Neue', sans-serif;
-        font-size: clamp(5rem, 12vw, 9rem);
-        line-height: 0.9;
-        letter-spacing: 0.02em;
-        opacity: 0;
-        transform: translateY(40px);
-      }
-
-      .hero-title span {
-        display: block;
-        color: var(--accent);
-      }
-
-      .hero-sub {
-        margin-top: 20px;
-        font-size: 0.9rem;
-        font-weight: 300;
-        color: var(--dim);
-        letter-spacing: 0.06em;
-        opacity: 0;
-      }
-
-      .hero-cta {
-        margin-top: 32px;
-        display: inline-flex;
-        align-items: center;
-        gap: 12px;
-        background: transparent;
-        border: 1px solid var(--accent);
-        color: var(--accent);
-        font-family: 'Inter', sans-serif;
-        font-size: 0.75rem;
-        font-weight: 600;
-        letter-spacing: 0.2em;
-        text-transform: uppercase;
-        padding: 14px 28px;
-        cursor: pointer;
-        pointer-events: all;
-        transition: background 0.3s, color 0.3s;
-        opacity: 0;
-      }
-
-      .hero-cta:hover {
-        background: var(--accent);
-        color: #060606;
-      }
-
-      .hero-cta svg { width: 14px; height: 14px; }
-
-      /* ── Specs ── */
-      .specs {
-        display: flex;
-        align-items: center;
-        gap: 0;
-        padding: 24px 48px;
-        border-top: 1px solid rgba(255,255,255,0.06);
-        background: rgba(6,6,6,0.6);
-        backdrop-filter: blur(12px);
-      }
-
-      .spec {
+      /* ── Scroll progress dots ── */
+      #progress-dots {
+        position: fixed;
+        right: 32px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 50;
         display: flex;
         flex-direction: column;
-        padding: 0 40px 0 0;
-        opacity: 0;
-        transform: translateY(20px);
-      }
-
-      .spec + .spec {
-        padding-left: 40px;
-        border-left: 1px solid rgba(255,255,255,0.08);
-      }
-
-      .spec-value {
-        font-family: 'Bebas Neue', sans-serif;
-        font-size: 2rem;
-        color: #fff;
-        letter-spacing: 0.04em;
-        line-height: 1;
-      }
-
-      .spec-label {
-        font-size: 0.65rem;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-        color: var(--dim);
-        margin-top: 4px;
-      }
-
-      .spec-divider {
-        flex: 1;
-      }
-
-      .scroll-hint {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-size: 0.65rem;
-        letter-spacing: 0.2em;
-        text-transform: uppercase;
-        color: var(--dim);
+        gap: 12px;
         opacity: 0;
       }
 
-      .scroll-hint-line {
-        width: 32px;
-        height: 1px;
-        background: var(--dim);
+      .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        border: 1px solid rgba(255,255,255,0.15);
+        transition: background 0.4s, transform 0.4s;
+        cursor: pointer;
+      }
+
+      .dot.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        transform: scale(1.5);
       }
 
       /* ── Loader ── */
       #loader {
         position: fixed;
         inset: 0;
-        z-index: 100;
+        z-index: 200;
         background: #060606;
         display: flex;
         flex-direction: column;
@@ -242,7 +131,6 @@
         width: 200px;
         height: 1px;
         background: rgba(255,255,255,0.1);
-        position: relative;
         overflow: hidden;
       }
 
@@ -258,69 +146,402 @@
         text-transform: uppercase;
         color: var(--dim);
       }
+
+      /* ── Scroll container ── */
+      #scroll-container {
+        position: relative;
+        z-index: 10;
+        pointer-events: none;
+      }
+
+      /* ── Scene sections ── */
+      .scene {
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        padding: 0 52px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .scene.align-right { justify-content: flex-end; }
+      .scene.align-center { justify-content: center; }
+
+      /* ── Section content cards ── */
+      .section-content {
+        max-width: 420px;
+        opacity: 0;
+      }
+
+      .section-tag {
+        font-size: 0.65rem;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .section-tag::before {
+        content: '';
+        display: block;
+        width: 28px;
+        height: 1px;
+        background: var(--accent);
+      }
+
+      .section-title {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: clamp(3.5rem, 7vw, 6rem);
+        line-height: 0.92;
+        letter-spacing: 0.02em;
+        margin-bottom: 20px;
+      }
+
+      .section-title .gold { color: var(--accent); }
+
+      .section-desc {
+        font-size: 0.88rem;
+        font-weight: 300;
+        line-height: 1.75;
+        color: var(--dim);
+        margin-bottom: 28px;
+        max-width: 340px;
+      }
+
+      .section-stat {
+        display: flex;
+        gap: 32px;
+        margin-top: 24px;
+      }
+
+      .stat-item { display: flex; flex-direction: column; }
+
+      .stat-value {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 1.8rem;
+        color: #fff;
+        letter-spacing: 0.04em;
+      }
+
+      .stat-label {
+        font-size: 0.6rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--dim);
+        margin-top: 2px;
+      }
+
+      /* ── S0: Hero ── */
+      #s0 { align-items: flex-end; padding-bottom: 0; flex-direction: column; justify-content: space-between; }
+
+      .hero-top {
+        align-self: flex-start;
+        padding-top: 120px;
+        opacity: 0;
+      }
+
+      .hero-label {
+        font-size: 0.65rem;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 12px;
+      }
+
+      .hero-title {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: clamp(5rem, 11vw, 9rem);
+        line-height: 0.88;
+        letter-spacing: 0.02em;
+        opacity: 0;
+      }
+
+      .hero-title .gold { color: var(--accent); }
+
+      .hero-sub {
+        margin-top: 18px;
+        font-size: 0.88rem;
+        font-weight: 300;
+        color: var(--dim);
+        letter-spacing: 0.06em;
+        opacity: 0;
+      }
+
+      .hero-cta {
+        margin-top: 28px;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        background: transparent;
+        border: 1px solid var(--accent);
+        color: var(--accent);
+        font-family: 'Inter', sans-serif;
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        padding: 13px 26px;
+        cursor: pointer;
+        pointer-events: all;
+        transition: background 0.3s, color 0.3s;
+        opacity: 0;
+      }
+
+      .hero-cta:hover { background: var(--accent); color: #060606; }
+      .hero-cta svg { width: 13px; height: 13px; }
+
+      /* specs bar */
+      .specs-bar {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        padding: 22px 52px;
+        border-top: 1px solid rgba(255,255,255,0.06);
+        background: rgba(6,6,6,0.65);
+        backdrop-filter: blur(14px);
+        width: 100%;
+        opacity: 0;
+      }
+
+      .spec {
+        display: flex;
+        flex-direction: column;
+        padding-right: 36px;
+      }
+
+      .spec + .spec {
+        padding-left: 36px;
+        border-left: 1px solid rgba(255,255,255,0.07);
+      }
+
+      .spec-value {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 1.8rem;
+        letter-spacing: 0.04em;
+        line-height: 1;
+      }
+
+      .spec-label {
+        font-size: 0.6rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--dim);
+        margin-top: 3px;
+      }
+
+      .spec-flex { flex: 1; }
+
+      .drag-hint {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.6rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.2);
+      }
+
+      .drag-hint-line { width: 28px; height: 1px; background: rgba(255,255,255,0.15); }
+
+      /* ── S4: Legacy centered ── */
+      .legacy-content {
+        text-align: center;
+        opacity: 0;
+      }
+
+      .legacy-content .section-tag { justify-content: center; }
+      .legacy-content .section-tag::before { display: none; }
+
+      .legacy-years {
+        font-size: 0.7rem;
+        letter-spacing: 0.3em;
+        color: var(--dim);
+        margin-top: 16px;
+        text-transform: uppercase;
+      }
+
+      /* scroll arrow */
+      .scroll-arrow {
+        position: absolute;
+        bottom: 32px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        opacity: 0;
+        animation: bounce 2s ease-in-out infinite;
+      }
+
+      .scroll-arrow span {
+        font-size: 0.58rem;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        color: var(--dim);
+      }
+
+      .scroll-arrow svg { width: 16px; height: 16px; color: var(--dim); }
+
+      @keyframes bounce {
+        0%, 100% { transform: translateX(-50%) translateY(0); }
+        50% { transform: translateX(-50%) translateY(6px); }
+      }
     </style>
   </head>
   <body>
     <canvas id="canvas"></canvas>
+    <div id="glow"></div>
 
     <!-- Loader -->
     <div id="loader">
       <div class="loader-brand">BMW M1</div>
-      <div class="loader-track">
-        <div id="loader-bar"></div>
-      </div>
+      <div class="loader-track"><div id="loader-bar"></div></div>
       <span class="loader-text">Loading</span>
     </div>
 
-    <!-- UI -->
-    <div class="ui">
-      <nav>
-        <span class="brand">BMW M</span>
-        <div class="nav-links">
-          <a href="#">Heritage</a>
-          <a href="#">Gallery</a>
-          <a href="#">Specs</a>
-        </div>
-      </nav>
-
-      <div class="hero">
-        <div class="hero-label">1979 &mdash; Motorsport</div>
-        <h1 class="hero-title">
-          BMW
-          <span>M1</span>
-        </h1>
-        <p class="hero-sub">The first M. The only original.</p>
-        <button class="hero-cta">
-          Explore
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M5 12h14M12 5l7 7-7 7"/>
-          </svg>
-        </button>
+    <!-- Fixed Nav -->
+    <nav>
+      <span class="brand">BMW M1</span>
+      <div class="nav-links">
+        <a href="#s1">Engine</a>
+        <a href="#s2">Design</a>
+        <a href="#s3">Performance</a>
+        <a href="#s4">Legacy</a>
       </div>
+    </nav>
 
-      <div class="specs">
-        <div class="spec">
-          <span class="spec-value">3.5L</span>
-          <span class="spec-label">Inline-6 Engine</span>
+    <!-- Section dots -->
+    <div id="progress-dots">
+      <div class="dot active" data-section="0"></div>
+      <div class="dot" data-section="1"></div>
+      <div class="dot" data-section="2"></div>
+      <div class="dot" data-section="3"></div>
+      <div class="dot" data-section="4"></div>
+    </div>
+
+    <!-- Scroll sections -->
+    <div id="scroll-container">
+
+      <!-- S0: Hero -->
+      <section class="scene" id="s0">
+        <div class="hero-top">
+          <div class="hero-label">1979 &mdash; Motorsport</div>
+          <h1 class="hero-title">BMW<br><span class="gold">M1</span></h1>
+          <p class="hero-sub">The first M. The only original.</p>
+          <button class="hero-cta" id="scroll-cta">
+            Discover
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14M5 12l7 7 7-7"/>
+            </svg>
+          </button>
         </div>
-        <div class="spec">
-          <span class="spec-value">277</span>
-          <span class="spec-label">Horsepower</span>
+
+        <div class="specs-bar">
+          <div class="spec">
+            <span class="spec-value">3.5L</span>
+            <span class="spec-label">Engine</span>
+          </div>
+          <div class="spec">
+            <span class="spec-value">277</span>
+            <span class="spec-label">Horsepower</span>
+          </div>
+          <div class="spec">
+            <span class="spec-value">261</span>
+            <span class="spec-label">Top Speed km/h</span>
+          </div>
+          <div class="spec">
+            <span class="spec-value">5.6s</span>
+            <span class="spec-label">0–100 km/h</span>
+          </div>
+          <div class="spec-flex"></div>
+          <div class="drag-hint">
+            <div class="drag-hint-line"></div>
+            Scroll to explore
+          </div>
         </div>
-        <div class="spec">
-          <span class="spec-value">261</span>
-          <span class="spec-label">Top Speed km/h</span>
+      </section>
+
+      <!-- S1: Engine -->
+      <section class="scene align-right" id="s1">
+        <div class="section-content" id="sc1">
+          <div class="section-tag">Engine</div>
+          <h2 class="section-title">3.5L<br><span class="gold">Inline-6</span></h2>
+          <p class="section-desc">
+            A naturally aspirated masterpiece producing 277 horsepower, hand-assembled by BMW Motorsport engineers. Every unit was built to endure the rigors of both road and track.
+          </p>
+          <div class="section-stat">
+            <div class="stat-item">
+              <span class="stat-value">277 HP</span>
+              <span class="stat-label">Power output</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value">330 Nm</span>
+              <span class="stat-label">Peak torque</span>
+            </div>
+          </div>
         </div>
-        <div class="spec">
-          <span class="spec-value">5.6s</span>
-          <span class="spec-label">0 – 100 km/h</span>
+      </section>
+
+      <!-- S2: Design -->
+      <section class="scene" id="s2">
+        <div class="section-content" id="sc2">
+          <div class="section-tag">Design</div>
+          <h2 class="section-title">Italian<br><span class="gold">Craft</span></h2>
+          <p class="section-desc">
+            Penned by Giorgetto Giugiaro of Italdesign, the M1's wedge silhouette was radical for its era — low, wide, and aerodynamically precise. A mid-engine layout unlike any BMW before it.
+          </p>
+          <div class="section-stat">
+            <div class="stat-item">
+              <span class="stat-value">4,360</span>
+              <span class="stat-label">Length (mm)</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value">1,412</span>
+              <span class="stat-label">Height (mm)</span>
+            </div>
+          </div>
         </div>
-        <div class="spec-divider"></div>
-        <div class="scroll-hint">
-          <div class="scroll-hint-line"></div>
-          Drag to rotate
+      </section>
+
+      <!-- S3: Performance -->
+      <section class="scene align-right" id="s3">
+        <div class="section-content" id="sc3">
+          <div class="section-tag">Performance</div>
+          <h2 class="section-title">Born<br><span class="gold">for Speed</span></h2>
+          <p class="section-desc">
+            Capable of 261 km/h straight off the factory floor. The M1 reached 100 km/h in just 5.6 seconds — figures that made it the fastest production BMW of its time.
+          </p>
+          <div class="section-stat">
+            <div class="stat-item">
+              <span class="stat-value">261 km/h</span>
+              <span class="stat-label">Top speed</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value">5.6s</span>
+              <span class="stat-label">0–100 km/h</span>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
+
+      <!-- S4: Legacy -->
+      <section class="scene align-center" id="s4">
+        <div class="legacy-content" id="sc4">
+          <div class="section-tag">Legacy</div>
+          <h2 class="section-title" style="font-size: clamp(4rem, 9vw, 7.5rem);">
+            The First<br><span class="gold">M</span>
+          </h2>
+          <p class="section-desc" style="margin: 20px auto 0; text-align: center;">
+            Only 453 road cars were ever built. The M1 launched the M division's pursuit of performance and remains the purest expression of what BMW Motorsport can achieve.
+          </p>
+          <p class="legacy-years">1978 &mdash; 1981</p>
+        </div>
+      </section>
+
     </div>
 
     <script type="module" src="/main.js"></script>

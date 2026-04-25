@@ -1,0 +1,22 @@
+{
+  "name": "practice1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "animejs": "^4.3.6",
+    "three": "^0.184.0"
+  },
+  "devDependencies": {
+    "vite": "^8.0.10"
+  }
+}

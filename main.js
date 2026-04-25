@@ -184,6 +184,28 @@ document.querySelectorAll('.nav-links a').forEach((a) => {
   });
 });
 
+// ── Burger menu ───────────────────────────────────────────
+const burger     = document.getElementById('burger');
+const mobileMenu = document.getElementById('mobile-menu');
+
+burger.addEventListener('click', () => {
+  const isOpen = mobileMenu.classList.toggle('open');
+  burger.classList.toggle('open', isOpen);
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+});
+
+// Close menu when a link is tapped
+document.querySelectorAll('.menu-link').forEach((link) => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    mobileMenu.classList.remove('open');
+    burger.classList.remove('open');
+    document.body.style.overflow = '';
+    const target = document.querySelector(link.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth' });
+  });
+});
+
 // ── Loader (plain CSS — no anime.js dependency) ───────────
 const loaderEl  = document.getElementById('loader');
 const loaderBar = document.getElementById('loader-bar');

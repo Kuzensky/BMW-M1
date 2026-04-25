@@ -24,37 +24,28 @@
         overflow-x: hidden;
       }
 
-      /* ── Canvas (fixed behind everything) ── */
-      #canvas {
-        position: fixed;
-        inset: 0;
-        z-index: 0;
-      }
+      /* ── Canvas ── */
+      #canvas { position: fixed; inset: 0; z-index: 0; }
 
-      /* spotlight glow */
       #glow {
         position: fixed;
-        bottom: -10%;
-        left: 50%;
+        bottom: -10%; left: 50%;
         transform: translateX(-50%);
-        width: 70vw;
-        height: 50vh;
+        width: 70vw; height: 50vh;
         background: radial-gradient(ellipse, rgba(200,169,110,0.07) 0%, transparent 70%);
         pointer-events: none;
         z-index: 1;
       }
 
-      /* ── Fixed Nav ── */
+      /* ── Nav ── */
       nav {
         position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 50;
+        top: 0; left: 0; right: 0;
+        z-index: 100;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 28px 52px;
+        padding: 24px 52px;
         opacity: 0;
       }
 
@@ -63,9 +54,15 @@
         font-size: 1.4rem;
         letter-spacing: 0.3em;
         color: var(--accent);
+        z-index: 110;
+        position: relative;
       }
 
-      .nav-links { display: flex; gap: 36px; }
+      /* Desktop links */
+      .nav-links {
+        display: flex;
+        gap: 36px;
+      }
 
       .nav-links a {
         color: var(--dim);
@@ -75,13 +72,79 @@
         letter-spacing: 0.14em;
         text-transform: uppercase;
         transition: color 0.3s;
+        pointer-events: all;
       }
       .nav-links a:hover { color: #fff; }
 
-      /* ── Scroll progress dots ── */
+      /* ── Burger button ── */
+      .burger {
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        gap: 5px;
+        width: 32px;
+        height: 32px;
+        cursor: pointer;
+        background: none;
+        border: none;
+        padding: 4px;
+        z-index: 110;
+        position: relative;
+        pointer-events: all;
+      }
+
+      .burger span {
+        display: block;
+        height: 1.5px;
+        background: #fff;
+        border-radius: 2px;
+        transition: transform 0.35s ease, opacity 0.35s ease, width 0.35s ease;
+        transform-origin: center;
+      }
+
+      .burger span:nth-child(2) { width: 70%; }
+
+      .burger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+      .burger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+      .burger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+      /* ── Mobile menu overlay ── */
+      .mobile-menu {
+        position: fixed;
+        inset: 0;
+        z-index: 90;
+        background: rgba(6,6,6,0.97);
+        backdrop-filter: blur(20px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 40px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.4s ease;
+      }
+
+      .mobile-menu.open {
+        opacity: 1;
+        pointer-events: all;
+      }
+
+      .mobile-menu a {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: clamp(2.5rem, 10vw, 4rem);
+        letter-spacing: 0.1em;
+        color: rgba(255,255,255,0.5);
+        text-decoration: none;
+        transition: color 0.3s;
+      }
+
+      .mobile-menu a:hover { color: var(--accent); }
+
+      /* ── Progress dots ── */
       #progress-dots {
         position: fixed;
-        right: 32px;
+        right: 20px;
         top: 50%;
         transform: translateY(-50%);
         z-index: 50;
@@ -92,8 +155,7 @@
       }
 
       .dot {
-        width: 6px;
-        height: 6px;
+        width: 6px; height: 6px;
         border-radius: 50%;
         background: rgba(255,255,255,0.2);
         border: 1px solid rgba(255,255,255,0.15);
@@ -109,8 +171,7 @@
 
       /* ── Loader ── */
       #loader {
-        position: fixed;
-        inset: 0;
+        position: fixed; inset: 0;
         z-index: 200;
         background: #060606;
         display: flex;
@@ -122,23 +183,19 @@
 
       .loader-brand {
         font-family: 'Bebas Neue', sans-serif;
-        font-size: 3rem;
+        font-size: clamp(2rem, 8vw, 3rem);
         letter-spacing: 0.4em;
         color: var(--accent);
       }
 
       .loader-track {
-        width: 200px;
+        width: min(200px, 60vw);
         height: 1px;
         background: rgba(255,255,255,0.1);
         overflow: hidden;
       }
 
-      #loader-bar {
-        height: 100%;
-        width: 0%;
-        background: var(--accent);
-      }
+      #loader-bar { height: 100%; width: 0%; background: var(--accent); }
 
       .loader-text {
         font-size: 0.65rem;
@@ -164,10 +221,10 @@
         overflow: hidden;
       }
 
-      .scene.align-right { justify-content: flex-end; }
+      .scene.align-right  { justify-content: flex-end; }
       .scene.align-center { justify-content: center; }
 
-      /* ── Section content cards ── */
+      /* ── Section content ── */
       .section-content {
         max-width: 420px;
         opacity: 0;
@@ -187,14 +244,14 @@
       .section-tag::before {
         content: '';
         display: block;
-        width: 28px;
-        height: 1px;
+        width: 28px; height: 1px;
         background: var(--accent);
+        flex-shrink: 0;
       }
 
       .section-title {
         font-family: 'Bebas Neue', sans-serif;
-        font-size: clamp(3.5rem, 7vw, 6rem);
+        font-size: clamp(3rem, 7vw, 6rem);
         line-height: 0.92;
         letter-spacing: 0.02em;
         margin-bottom: 20px;
@@ -203,7 +260,7 @@
       .section-title .gold { color: var(--accent); }
 
       .section-desc {
-        font-size: 0.88rem;
+        font-size: clamp(0.8rem, 2vw, 0.88rem);
         font-weight: 300;
         line-height: 1.75;
         color: var(--dim);
@@ -211,17 +268,12 @@
         max-width: 340px;
       }
 
-      .section-stat {
-        display: flex;
-        gap: 32px;
-        margin-top: 24px;
-      }
-
+      .section-stat { display: flex; gap: 32px; margin-top: 24px; }
       .stat-item { display: flex; flex-direction: column; }
 
       .stat-value {
         font-family: 'Bebas Neue', sans-serif;
-        font-size: 1.8rem;
+        font-size: clamp(1.4rem, 4vw, 1.8rem);
         color: #fff;
         letter-spacing: 0.04em;
       }
@@ -234,8 +286,13 @@
         margin-top: 2px;
       }
 
-      /* ── S0: Hero ── */
-      #s0 { align-items: flex-end; padding-bottom: 0; flex-direction: column; justify-content: space-between; }
+      /* ── Hero ── */
+      #s0 {
+        align-items: flex-end;
+        padding-bottom: 0;
+        flex-direction: column;
+        justify-content: space-between;
+      }
 
       .hero-top {
         align-self: flex-start;
@@ -253,7 +310,7 @@
 
       .hero-title {
         font-family: 'Bebas Neue', sans-serif;
-        font-size: clamp(5rem, 11vw, 9rem);
+        font-size: clamp(4rem, 11vw, 9rem);
         line-height: 0.88;
         letter-spacing: 0.02em;
         opacity: 0;
@@ -263,7 +320,7 @@
 
       .hero-sub {
         margin-top: 18px;
-        font-size: 0.88rem;
+        font-size: clamp(0.78rem, 2vw, 0.88rem);
         font-weight: 300;
         color: var(--dim);
         letter-spacing: 0.06em;
@@ -293,40 +350,41 @@
       .hero-cta:hover { background: var(--accent); color: #060606; }
       .hero-cta svg { width: 13px; height: 13px; }
 
-      /* specs bar */
+      /* ── Specs bar ── */
       .specs-bar {
         display: flex;
         align-items: center;
-        gap: 0;
-        padding: 22px 52px;
+        flex-wrap: wrap;
+        padding: 18px 52px;
         border-top: 1px solid rgba(255,255,255,0.06);
         background: rgba(6,6,6,0.65);
         backdrop-filter: blur(14px);
         width: 100%;
         opacity: 0;
+        gap: 0;
       }
 
       .spec {
         display: flex;
         flex-direction: column;
-        padding-right: 36px;
+        padding-right: 28px;
       }
 
       .spec + .spec {
-        padding-left: 36px;
+        padding-left: 28px;
         border-left: 1px solid rgba(255,255,255,0.07);
       }
 
       .spec-value {
         font-family: 'Bebas Neue', sans-serif;
-        font-size: 1.8rem;
+        font-size: clamp(1.3rem, 3.5vw, 1.8rem);
         letter-spacing: 0.04em;
         line-height: 1;
       }
 
       .spec-label {
-        font-size: 0.6rem;
-        letter-spacing: 0.2em;
+        font-size: 0.55rem;
+        letter-spacing: 0.18em;
         text-transform: uppercase;
         color: var(--dim);
         margin-top: 3px;
@@ -346,12 +404,8 @@
 
       .drag-hint-line { width: 28px; height: 1px; background: rgba(255,255,255,0.15); }
 
-      /* ── S4: Legacy centered ── */
-      .legacy-content {
-        text-align: center;
-        opacity: 0;
-      }
-
+      /* ── Legacy ── */
+      .legacy-content { text-align: center; opacity: 0; }
       .legacy-content .section-tag { justify-content: center; }
       .legacy-content .section-tag::before { display: none; }
 
@@ -363,32 +417,60 @@
         text-transform: uppercase;
       }
 
-      /* scroll arrow */
-      .scroll-arrow {
-        position: absolute;
-        bottom: 32px;
-        left: 50%;
-        transform: translateX(-50%);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 8px;
-        opacity: 0;
-        animation: bounce 2s ease-in-out infinite;
+      /* ═══════════════════════════════════════
+         MOBILE  ≤ 768px
+      ═══════════════════════════════════════ */
+      @media (max-width: 768px) {
+
+        /* Nav */
+        nav { padding: 20px 24px; }
+        .nav-links { display: none; }
+        .burger { display: flex; }
+
+        /* Dots — hide on small screens, too cluttered */
+        #progress-dots { display: none; }
+
+        /* Sections */
+        .scene { padding: 0 24px; }
+
+        /* Hero */
+        .hero-top { padding-top: 100px; }
+
+        /* Section content — always left aligned on mobile */
+        .scene.align-right  { justify-content: flex-start; }
+        .scene.align-center { justify-content: flex-start; }
+
+        .section-content { max-width: 100%; }
+        .legacy-content  { text-align: left; }
+        .legacy-content .section-tag { justify-content: flex-start; }
+
+        .section-desc { max-width: 100%; }
+
+        /* Specs bar — 2×2 grid on mobile */
+        .specs-bar {
+          padding: 16px 24px;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 16px 0;
+        }
+
+        .spec { padding: 0 !important; border: none !important; }
+        .spec + .spec { border-left: none !important; padding-left: 0 !important; }
+
+        .spec-flex { display: none; }
+        .drag-hint { display: none; }
       }
 
-      .scroll-arrow span {
-        font-size: 0.58rem;
-        letter-spacing: 0.25em;
-        text-transform: uppercase;
-        color: var(--dim);
-      }
-
-      .scroll-arrow svg { width: 16px; height: 16px; color: var(--dim); }
-
-      @keyframes bounce {
-        0%, 100% { transform: translateX(-50%) translateY(0); }
-        50% { transform: translateX(-50%) translateY(6px); }
+      /* ═══════════════════════════════════════
+         TABLET  769px – 1024px
+      ═══════════════════════════════════════ */
+      @media (min-width: 769px) and (max-width: 1024px) {
+        nav { padding: 24px 36px; }
+        .scene { padding: 0 36px; }
+        .specs-bar { padding: 18px 36px; }
+        .spec { padding-right: 20px; }
+        .spec + .spec { padding-left: 20px; }
+        .section-content { max-width: 360px; }
       }
     </style>
   </head>
@@ -403,7 +485,15 @@
       <span class="loader-text">Loading</span>
     </div>
 
-    <!-- Fixed Nav -->
+    <!-- Mobile menu overlay -->
+    <div class="mobile-menu" id="mobile-menu">
+      <a href="#s1" class="menu-link">Engine</a>
+      <a href="#s2" class="menu-link">Design</a>
+      <a href="#s3" class="menu-link">Performance</a>
+      <a href="#s4" class="menu-link">Legacy</a>
+    </div>
+
+    <!-- Nav -->
     <nav>
       <span class="brand">BMW M1</span>
       <div class="nav-links">
@@ -412,9 +502,14 @@
         <a href="#s3">Performance</a>
         <a href="#s4">Legacy</a>
       </div>
+      <button class="burger" id="burger" aria-label="Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
     </nav>
 
-    <!-- Section dots -->
+    <!-- Progress dots -->
     <div id="progress-dots">
       <div class="dot active" data-section="0"></div>
       <div class="dot" data-section="1"></div>
@@ -532,7 +627,7 @@
       <section class="scene align-center" id="s4">
         <div class="legacy-content" id="sc4">
           <div class="section-tag">Legacy</div>
-          <h2 class="section-title" style="font-size: clamp(4rem, 9vw, 7.5rem);">
+          <h2 class="section-title" style="font-size: clamp(3rem, 9vw, 7.5rem);">
             The First<br><span class="gold">M</span>
           </h2>
           <p class="section-desc" style="margin: 20px auto 0; text-align: center;">
